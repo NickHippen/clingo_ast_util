@@ -2,4 +2,4 @@
 
 from setuptools import setup
 
-setup(name='clingo_ast_util.py')
+setup(name='clingo_ast_util')
