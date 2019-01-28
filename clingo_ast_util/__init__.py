@@ -28,6 +28,23 @@ def get_predicate_symbol(ast):
         raise TypeError('Cannot handle external functions')
     return '%s/%d' % (function.name, len(function.arguments))
 
+def is_predicate_in_positive_body(rule, predicate):
+    if not hasattr(rule, 'type'):
+        raise not_ast_error
+    if rule.type != clingo.ast.ASTType.Rule:
+        raise TypeError('AST must be of type Rule (found %s)' % rule.type)
+    for body_literal in rule.body:
+        try:
+            if is_positive(body_literal):
+                body_predicate = get_predicate_symbol(body_literal)
+            else:
+                continue
+        except TypeError:
+            raise TypeError('Unsupported literal in body of rule')
+        if body_predicate == predicate:
+            return True
+    return False
+
 def is_positive(literal):
     '''Returns if the literal has epistemic negation. If the literal atom is a Comparison, will return False.'''
     if not hasattr(literal, 'type'):
