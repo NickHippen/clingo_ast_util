@@ -204,3 +204,12 @@ class PredicateSymbol(object):
     
     def __str__(self):
         return '%s/%d' % (self._name, self._arity)
+    
+    def __repr__(self):
+        return str(self)
+    
+    def __eq__(self, value):
+        if not isinstance(value, PredicateSymbol):
+            return False
+        return str(self) == str(value)
+    
