@@ -185,13 +185,22 @@ class ASTCopier(ASTVisitor):
             return super(ASTCopier, self).visit(x)
 
 class PredicateSymbol(object):
+    '''A class representation of a predicate symbol. Name and arity are immutable.'''
 
     def __init__(self, name, arity):
-        self.name = name
-        self.arity = arity
+        self._name = name
+        self._arity = arity
+    
+    def name(self):
+        '''Returns the name of the predicate symbol'''
+        return self._name
+
+    def arity(self):
+        '''Returns the arity of the predicate symbol'''
+        return self._arity
     
     def __hash__(self):
         return hash(str(self))
     
     def __str__(self):
-        return '%s/%d' % (self.name, self.arity)
+        return '%s/%d' % (self._name, self._arity)
