@@ -22,7 +22,6 @@ def get_arguments(ast):
     '''Gets the arguments of a literal, atom, or function'''
     function = _find_function(ast)
     return function.arguments
-        
 
 def _find_function(ast):
     if not hasattr(ast, 'type'):
@@ -56,6 +55,8 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
             return True
     return False
 
+def ast_equals(ast_A, ast_B):
+    return str(ast_A) == str(ast_B)
 
 def is_predicate_in_positive_body(rule, predicate):
     return is_predicate_in_body(rule, predicate, is_positive)
@@ -129,7 +130,7 @@ class ASTWrapper(object):
         return '<%s>' % repr(self.ast)
     
     def __eq__(self, other):
-        return str(self.ast) == str(other.ast)
+        return ast_equals(self, other)
     
     def __ne__(self, other):
         return not self.__eq__(other)
