@@ -26,7 +26,7 @@ def get_predicate_symbol(ast):
     function = function_set.pop().unwrap()
     if function.external:
         raise TypeError('Cannot handle external functions')
-    return '%s/%d' % (function.name, len(function.arguments))
+    return PredicateSymbol(function.name, len(function.arguments))
 
 def is_predicate_in_body(rule, predicate, other_conditional=None):
     if not hasattr(rule, 'type'):
@@ -183,3 +183,15 @@ class ASTCopier(ASTVisitor):
             return super(ASTCopier, self).visit(x)
         else:
             return super(ASTCopier, self).visit(x)
+
+class PredicateSymbol(object):
+
+    def __init__(self, name, arity):
+        self.name = name
+        self.arity = arity
+    
+    def __hash__(self):
+        return hash(str(self))
+    
+    def __str__(self):
+        return '%s/%d' % (self.name, self.arity)
