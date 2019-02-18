@@ -50,7 +50,7 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
             else:
                 continue
         except TypeError:
-            raise TypeError('Unsupported literal in body of rule')
+            raise TypeError('Unsupported literal in body of rule: %s' % body_literal)
         if body_predicate == predicate:
             return True
     return False
