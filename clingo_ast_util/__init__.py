@@ -35,7 +35,7 @@ def _find_function(ast):
     assert len(function_set) > 0
     function = function_set.pop().unwrap()
     if function.external:
-        raise TypeError('Cannot handle external functions')
+        raise TypeError('Cannot handle external functions (%s)' % function)
     return function
 
 def is_predicate_in_body(rule, predicate, other_conditional=None):
@@ -43,16 +43,21 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
         raise not_ast_error
     if rule.type != ASTType.Rule:
         raise TypeError('AST must be of type Rule (found %s)' % rule.type)
-    for body_literal in rule.body:
-        try:
-            if other_conditional is None or other_conditional(body_literal):
-                body_predicate = get_predicate_symbol(body_literal)
-            else:
-                continue
-        except TypeError:
-            raise TypeError('Unsupported literal in body of rule: %s' % body_literal)
-        if body_predicate == predicate:
-            return True
+    for body_element in rule.body:
+        if body_element.type == ASTType.Comparison:
+            body_literals = [body_element.left, body_element.right]
+        else:
+            body_literals = [body_element]
+        for body_literal in body_literals:
+            try:
+                if other_conditional is None or other_conditional(body_literal):
+                    body_predicate = get_predicate_symbol(body_literal)
+                else:
+                    continue
+            except TypeError:
+                raise TypeError('Unsupported literal in body of rule: %s' % body_literal)
+            if body_predicate == predicate:
+                return True
     return False
 
 def ast_equals(ast_A, ast_B):
@@ -69,7 +74,7 @@ def is_positive(literal):
     if not hasattr(literal, 'type'):
         raise not_ast_error
     if literal.type != ASTType.Literal:
-        raise TypeError('AST must be of type Literal')
+        raise TypeError('AST must be of type Literal, was %s (%s)' % (literal.type, literal))
     if literal.atom.type == ASTType.Comparison:
         return False
     return literal.sign == clingo.ast.Sign.NoSign
