@@ -43,21 +43,23 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
         raise not_ast_error
     if rule.type != ASTType.Rule:
         raise TypeError('AST must be of type Rule (found %s)' % rule.type)
-    for body_element in rule.body:
-        if body_element.type == ASTType.Comparison:
-            body_literals = [body_element.left, body_element.right]
-        else:
-            body_literals = [body_element]
-        for body_literal in body_literals:
-            try:
-                if other_conditional is None or other_conditional(body_literal):
-                    body_predicate = get_predicate_symbol(body_literal)
-                else:
-                    continue
-            except TypeError:
-                raise TypeError('Type "%s" is not supported currently: %s' % (body_literal.type, body_literal))
-            if body_predicate == predicate:
-                return True
+    for body_literal in rule.body:
+        # if body_element.type == ASTType.Comparison:
+        #     body_literals = [body_element.left, body_element.right]
+        # else:
+        #     body_literals = [body_element]
+        # for body_literal in body_literals:
+        if body_literal.type == ASTType.Comparison:
+            continue # Comparisons can just be ignored, they won't have predicates in them
+        try:
+            if other_conditional is None or other_conditional(body_literal):
+                body_predicate = get_predicate_symbol(body_literal)
+            else:
+                continue
+        except TypeError:
+            raise TypeError('Type "%s" is not supported currently: %s' % (body_literal.type, body_literal))
+        if body_predicate == predicate:
+            return True
     return False
 
 def ast_equals(ast_A, ast_B):
