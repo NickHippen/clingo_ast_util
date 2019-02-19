@@ -1,4 +1,5 @@
 import clingo.ast
+from clingo.ast import ASTType
 
 not_ast_error = TypeError('Literal must be an AST object with a type attribute')
 
@@ -10,41 +11,59 @@ def find_ast_type(ast, ast_type):
     return type_search.ast_objects()
 
 def find_variables(ast):
-    return find_ast_type(ast, clingo.ast.ASTType.Variable)
+    return find_ast_type(ast, ASTType.Variable)
 
 def get_predicate_symbol(ast):
     '''Gets the predicate symbol of a literal, atom, or function'''
+    function = _find_function(ast)
+    return PredicateSymbol(function.name, len(function.arguments))
+
+def get_arguments(ast):
+    '''Gets the arguments of a literal, atom, or function'''
+    function = _find_function(ast)
+    return function.arguments
+
+def _find_function(ast):
     if not hasattr(ast, 'type'):
         raise not_ast_error
-    if ast.type == clingo.ast.ASTType.Literal:
-        if ast.atom.type != clingo.ast.ASTType.SymbolicAtom:
+    if ast.type == ASTType.Literal:
+        if ast.atom.type != ASTType.SymbolicAtom:
             raise TypeError('Literal atom attribute must be of type SymbolicAtom (was %s)' % ast.atom.type)
-    elif ast.type not in [clingo.ast.ASTType.SymbolicAtom, clingo.ast.ASTType.Function]:
+    elif ast.type not in [ASTType.SymbolicAtom, ASTType.Function]:
         raise TypeError('%s is not of type "Literal", "SymbolicAtom", or "Function"' % ast.type)
-    function_set = find_ast_type(ast, clingo.ast.ASTType.Function)
+    function_set = find_ast_type(ast, ASTType.Function)
     assert len(function_set) > 0
     function = function_set.pop().unwrap()
     if function.external:
-        raise TypeError('Cannot handle external functions')
-    return '%s/%d' % (function.name, len(function.arguments))
+        raise TypeError('Cannot handle external functions (%s)' % function)
+    return function
 
 def is_predicate_in_body(rule, predicate, other_conditional=None):
     if not hasattr(rule, 'type'):
         raise not_ast_error
-    if rule.type != clingo.ast.ASTType.Rule:
+    if rule.type != ASTType.Rule:
         raise TypeError('AST must be of type Rule (found %s)' % rule.type)
     for body_literal in rule.body:
+        # if body_element.type == ASTType.Comparison:
+        #     body_literals = [body_element.left, body_element.right]
+        # else:
+        #     body_literals = [body_element]
+        # for body_literal in body_literals:
+        if body_literal.type == ASTType.Comparison:
+            continue # Comparisons can just be ignored, they won't have predicates in them
         try:
             if other_conditional is None or other_conditional(body_literal):
                 body_predicate = get_predicate_symbol(body_literal)
             else:
                 continue
         except TypeError:
-            raise TypeError('Unsupported literal in body of rule')
+            raise TypeError('Type "%s" is not supported currently: %s' % (body_literal.type, body_literal))
         if body_predicate == predicate:
             return True
     return False
 
+def ast_equals(ast_A, ast_B):
+    return str(ast_A) == str(ast_B)
 
 def is_predicate_in_positive_body(rule, predicate):
     return is_predicate_in_body(rule, predicate, is_positive)
@@ -56,14 +75,14 @@ def is_positive(literal):
     '''Returns if the literal has epistemic negation. If the literal atom is a Comparison, will return False.'''
     if not hasattr(literal, 'type'):
         raise not_ast_error
-    if literal.type != clingo.ast.ASTType.Literal:
-        raise TypeError('AST must be of type Literal')
-    if literal.atom.type == clingo.ast.ASTType.Comparison:
+    if literal.type != ASTType.Literal:
+        raise TypeError('AST must be of type Literal, was %s (%s)' % (literal.type, literal))
+    if literal.atom.type == ASTType.Comparison:
         return False
     return literal.sign == clingo.ast.Sign.NoSign
 
 def get_head_literals(rule):
-    if rule.head.type == clingo.ast.ASTType.Disjunction:
+    if rule.head.type == ASTType.Disjunction:
         head_literals = [cond_lit.literal for cond_lit in rule.head.elements]
     else:
         head_literals = [rule.head]
@@ -77,7 +96,7 @@ def copy(ast, transformer=None): # TODO Remove the need for this transformer
 
 def is_rule(x):
     if isinstance(x, clingo.ast.AST):
-        return x.type == clingo.ast.ASTType.Rule
+        return x.type == ASTType.Rule
     return False
 
 class ASTVisitor(object):
@@ -118,7 +137,7 @@ class ASTWrapper(object):
         return '<%s>' % repr(self.ast)
     
     def __eq__(self, other):
-        return str(self.ast) == str(other.ast)
+        return ast_equals(self, other)
     
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -183,3 +202,33 @@ class ASTCopier(ASTVisitor):
             return super(ASTCopier, self).visit(x)
         else:
             return super(ASTCopier, self).visit(x)
+
+class PredicateSymbol(object):
+    '''A class representation of a predicate symbol. Name and arity are immutable.'''
+
+    def __init__(self, name, arity):
+        self.__name = name
+        self.__arity = arity
+    
+    def name(self):
+        '''Returns the name of the predicate symbol'''
+        return self.__name
+
+    def arity(self):
+        '''Returns the arity of the predicate symbol'''
+        return self.__arity
+    
+    def __hash__(self):
+        return hash(str(self))
+    
+    def __str__(self):
+        return '%s/%d' % (self.__name, self.__arity)
+    
+    def __repr__(self):
+        return str(self)
+    
+    def __eq__(self, value):
+        if not isinstance(value, PredicateSymbol):
+            return False
+        return str(self) == str(value)
+    
