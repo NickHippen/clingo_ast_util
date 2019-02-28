@@ -62,6 +62,12 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
             return True
     return False
 
+def is_constraint(rule):
+    '''Returns whether or not rule is a constraint'''
+    if rule.head.type == ASTType.Literal:
+        return rule.head.atom.type == ASTType.BooleanConstant
+    return False
+
 def ast_equals(ast_A, ast_B):
     return str(ast_A) == str(ast_B)
 
