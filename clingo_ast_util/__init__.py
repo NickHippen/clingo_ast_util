@@ -90,6 +90,8 @@ def is_positive(literal):
 def get_head_literals(rule):
     if rule.head.type == ASTType.Disjunction:
         head_literals = [cond_lit.literal for cond_lit in rule.head.elements]
+    elif rule.head.type == ASTType.Aggregate:
+        head_literals = [cond_lit.literal for cond_lit in rule.head.elements]
     else:
         head_literals = [rule.head]
     return head_literals
