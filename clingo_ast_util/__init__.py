@@ -44,22 +44,22 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
     if rule.type != ASTType.Rule:
         raise TypeError('AST must be of type Rule (found %s)' % rule.type)
     for body_literal in rule.body:
-        # if body_element.type == ASTType.Comparison:
-        #     body_literals = [body_element.left, body_element.right]
-        # else:
-        #     body_literals = [body_element]
-        # for body_literal in body_literals:
         if body_literal.atom.type == ASTType.Comparison:
             continue # Comparisons can just be ignored, they won't have predicates in them
-        # try:
-        if other_conditional is None or other_conditional(body_literal):
-            body_predicate = get_predicate_symbol(body_literal)
-        else:
+        if body_literal.atom.type == ASTType.BodyAggregate:
+            # element_conditions = [element.condition for element in body_literal.atom.elements]
+            # check_literals = []
+            # for condition in element_conditions:
+            #     check_literals += condition
             continue
-        # except TypeError:
-        #     raise TypeError('Type "%s" is not supported currently: %s' % (body_literal.type, body_literal))
-        if body_predicate == predicate:
-            return True
+        else:
+            # TODO Add more special cases
+            check_literals = [body_literal]
+        for check_literal in check_literals:
+            if other_conditional is None or other_conditional(check_literal):
+                body_predicate = get_predicate_symbol(check_literal)
+                if body_predicate == predicate:
+                    return True
     return False
 
 def is_constraint(rule):
