@@ -46,7 +46,7 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
     for body_literal in rule.body:
         if body_literal.atom.type == ASTType.Comparison:
             continue # Comparisons can just be ignored, they won't have predicates in them
-        if body_literal.atom.type == ASTType.BodyAggregate:
+        if body_literal.atom.type == ASTType.BodyAggregate or body_literal.atom.type == ASTType.Aggregate:
             # element_conditions = [element.condition for element in body_literal.atom.elements]
             # check_literals = []
             # for condition in element_conditions:
