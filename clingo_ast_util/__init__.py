@@ -28,7 +28,7 @@ def _find_function(ast):
         raise not_ast_error
     if ast.type == ASTType.Literal:
         if ast.atom.type != ASTType.SymbolicAtom:
-            raise TypeError('Literal atom attribute must be of type SymbolicAtom (was %s)' % ast.atom.type)
+            raise TypeError('Literal atom attribute must be of type SymbolicAtom (was %s [%s])' % (ast.atom.type, ast))
     elif ast.type not in [ASTType.SymbolicAtom, ASTType.Function]:
         raise TypeError('%s is not of type "Literal", "SymbolicAtom", or "Function"' % ast.type)
     function_set = find_ast_type(ast, ASTType.Function)
@@ -44,6 +44,8 @@ def is_predicate_in_body(rule, predicate, other_conditional=None):
     if rule.type != ASTType.Rule:
         raise TypeError('AST must be of type Rule (found %s)' % rule.type)
     for body_literal in rule.body:
+        if body_literal.type == ASTType.ConditionalLiteral:
+            body_literal = body_literal.literal
         if body_literal.atom.type == ASTType.Comparison:
             continue # Comparisons can just be ignored, they won't have predicates in them
         if body_literal.atom.type == ASTType.BodyAggregate or body_literal.atom.type == ASTType.Aggregate:
