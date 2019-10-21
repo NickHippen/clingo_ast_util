@@ -94,7 +94,7 @@ def get_head_literals(rule):
         head_literals = [cond_lit.literal for cond_lit in rule.head.elements]
     elif rule.head.type == ASTType.Aggregate:
         head_literals = [cond_lit.literal for cond_lit in rule.head.elements]
-    elif rule.head.type == ASTType.Literal and rule.head.atom.term.type == ASTType.Pool:
+    elif rule.head.type == ASTType.Literal and hasattr(rule.head.atom, 'term') and rule.head.atom.term.type == ASTType.Pool:
         head_literals = rule.head.atom.term.arguments
     else:
         head_literals = [rule.head]
